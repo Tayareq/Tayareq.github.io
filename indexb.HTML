@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Diary</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --input-bg: #2c2c2c;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #bb86fc;
+            --accent-hover: #9965f4;
+            --border: #333333;
+            --danger: #cf6679;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* --- Screens --- */
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Login Screen --- */
+        #login-screen {
+            text-align: center;
+            margin-top: 15vh;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--accent);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* --- Forms & Inputs --- */
+        input, textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 15px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            width: auto;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        button.secondary:hover {
+            background-color: var(--input-bg);
+            color: var(--text-main);
+        }
+
+        /* --- App Layout --- */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .create-box {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        /* --- Entries List --- */
+        .entry {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .entry-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .entry-text {
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            margin-bottom: 15px;
+        }
+
+        .entry-note {
+            background-color: rgba(187, 134, 252, 0.15);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .entry-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .delete-btn {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .delete-btn:hover {
+            background-color: var(--danger);
+            color: #000;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 50px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="screen active">
+        <h2>Identity Check</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Enter your username to access your private diary.</p>
+        <input type="text" id="username-input" placeholder="Username" autocomplete="off">
+        <button onclick="login()">Enter System</button>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="app-screen" class="screen">
+        <div class="app-header">
+            <h2 id="welcome-msg" style="margin:0; font-size: 20px;">Diary</h2>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search records..." onkeyup="renderEntries()">
+        </div>
+
+        <div class="create-box">
+            <textarea id="entry-text" placeholder="What's on your mind?"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="entry-note" placeholder="Add a tag/note (optional)" style="margin-bottom: 0;">
+                <button onclick="addEntry()" style="width: auto; margin-bottom: 0;">Save</button>
+            </div>
+        </div>
+
+        <div id="entries-container">
+            <!-- Entries render here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+
+    window.onload = function() {
+        const savedUser = localStorage.getItem('diary_current_user');
+        if (savedUser) {
+            currentUser = savedUser;
+            showApp();
+        }
+    };
+
+    function login() {
+        const username = document.getElementById('username-input').value.trim();
+        if (!username) {
+            alert("Please enter a username");
+            return;
+        }
+        currentUser = username;
+        localStorage.setItem('diary_current_user', currentUser);
+        showApp();
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('diary_current_user');
+        document.getElementById('login-screen').classList.add('active');
+        document.getElementById('app-screen').classList.remove('active');
+        document.getElementById('username-input').value = '';
+    }
+
+    function showApp() {
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('app-screen').classList.add('active');
+        document.getElementById('welcome-msg').innerText = 'Diary: ' + currentUser;
+        renderEntries();
+    }
+
+    function addEntry() {
+        const text = document.getElementById('entry-text').value;
+        const note = document.getElementById('entry-note').value;
+
+        if (!text) {
+            alert("Entry cannot be empty");
+            return;
+        }
+
+        const entry = {
+            id: Date.now(),
+            user: currentUser,
+            text: text,
+            note: note,
+            date: new Date().toLocaleString()
+        };
+
+        let allEntries = JSON.parse(localStorage.getItem('diary_entries') || '[]');
+        allEntries.push(entry);
+        localStorage.setItem('diary_entries', JSON.stringify(allEntries));
+
+        document.getElementById('entry-text').value = '';
+        document.getElementById('entry-note').value = '';
+        renderEntries();
+    }
+
+    function deleteEntry(id) {
+        if(!confirm('Are you sure you want to delete this record?')) return;
+
+        let allEntries = JSON.parse(localStorage.getItem('diary_entries') || '[]');
+        allEntries = allEntries.filter(e => e.id !== id);
+        localStorage.setItem('diary_entries', JSON.stringify(allEntries));
+        renderEntries();
+    }
+
+    function renderEntries() {
+        const container = document.getElementById('entries-container');
+        const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+        let allEntries = JSON.parse(localStorage.getItem('diary_entries') || '[]');
+
+        const myEntries = allEntries.filter(entry => {
+            const isMine = entry.user === currentUser;
+            const matchesSearch = entry.text.toLowerCase().includes(searchQuery) || 
+                                  entry.note.toLowerCase().includes(searchQuery);
+            return isMine && matchesSearch;
+        });
+
+        myEntries.reverse();
+
+        container.innerHTML = '';
+
+        if (myEntries.length === 0) {
+            container.innerHTML = '<div class="empty-state">No records found</div>';
+            return;
+        }
+
+        myEntries.forEach(entry => {
+            const noteHtml = entry.note ? `<div class="entry-note"># ${entry.note}</div>` : '';
+            
+            const html = `
+                <div class="entry">
+                    <div class="entry-meta">
+                        <span>${entry.date}</span>
+                    </div>
+                    <div class="entry-text">${escapeHtml(entry.text)}</div>
+                    ${noteHtml}
+                    <div class="entry-actions">
+                        <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+
+</body>
+</html>
